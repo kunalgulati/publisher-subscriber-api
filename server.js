@@ -29,8 +29,7 @@ app.post('/subscribe/:topic', (req, res) => {
 
     /** If the url is empty then return an appropriate error */
     if (url == undefined || url == "") {
-        res.status(400).send('Request Rejected because no url was provided')
-        return 0;
+        return res.status(400).send('Request Rejected because no url was provided')
     }
     /** Map topic to subscribed links */
     if (subscribeMap.has(topic)) { subscribeMap.get(topic).push(url) } else { subscribeMap.set(topic, [url]); }
@@ -70,11 +69,11 @@ app.post('/publish/:topic', (req, res) => {
         /** POST published message to all the subscribers for the {TOPIC} */
         async.mapLimit(subscribersList, 5, async function (eachUrl) {
             axios.post(eachUrl, { "data": subscriberData })
-                .then((res) => {
+                .then((response) => {
                     /** The error handling strategy was suggested in the assignment. 
                     *   So I am returning response code = 400, when something went wrong with a POST request to a subscriber 
                     * */
-                    if (res.status != 200) { res.send(400).send("Error in Publishing data to Subscriber") }
+                    if (response.status != 200) { res.send(400).send("Error in Publishing data to Subscriber") }
                 }).catch((err) => {
                     console.error(err);
                     return res.send(400).send("Error in Publishing data to Subscriber")
@@ -84,8 +83,8 @@ app.post('/publish/:topic', (req, res) => {
         /** When no subscribers exit for the published topic. The code will still return status code 200, with a more descriptive message. * */
         return res.status(200).send("No subscribers exists for the Published Topic")
     }
-
-    return res.status(200).send("Succesfully published data to all the subscribers")
+    console.log("success");
+    return res.status(200).send({body: "Succesfully published data to all the subscribers"})
 })
 
 app.listen(PORT, () => {
