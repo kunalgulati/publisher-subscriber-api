@@ -27,13 +27,24 @@ app.post('/subscribe/:topic', (req, res) => {
 
     /** If the url is empty then return an appropriate error */
     if (url == undefined || url == "") {
-        return res.status(400).send('Request Rejected because no url was provided')
+        return res.status(400).send({message: 'Request Rejected because no url was provided'})
     }
+    
+    /** 
+     * If the User is already subscribed to a topic,
+     * then adding duplicates will increase the cost of Publishing (POST) messages 
+     */
+    if (subscribeMap.has(topic) && subscribeMap.get(topic).includes(url) ) { 
+        return res.status(200).send({message: `You are already subscribed to ${topic}`});
+    } 
+
     /** Map topic to subscribed links */
-    if (subscribeMap.has(topic)) { subscribeMap.get(topic).push(url) } else { subscribeMap.set(topic, [url]); }
-    console.log(subscribeMap)
+    if(subscribeMap.has(topic)) { subscribeMap.get(topic).push(url);  } 
+    else { subscribeMap.set(topic, [url]); }
+    
+    // console.log(subscribeMap)
     /** Return 201 code because a new subscription was created.  */
-    res.status(201).send(`messagefully subscribed to topic: ${topic}`)
+    return res.status(201).send({message: `Successfully subscribed to topic: ${topic}`} )
 })
 
 /** 
@@ -56,11 +67,11 @@ app.post('/publish/:topic', (req, res) => {
     const topicArgs = req.params.topic;
     let subscriberData = {};
     // To ensure the code doesn't in next step (while checking if Object is empty) break if req.body = undefined
-    const data = req.body || {};
+    const bodyVal = req.body || {};
 
     /** If the body is not empty, then extract the data */
-    if ( Object.keys(req.body).length == 0) { return res.status(400).send({ message: "No message in the Publish (POST) request"}) }
-    else { subscriberData = { topic: topicArgs, data: req.body } }  
+    if ( Object.keys(bodyVal).length == 0) { return res.status(400).send({ message: "No message in the Publish (POST) request"}) }
+    else { subscriberData = { topic: topicArgs, data: bodyVal } }  
 
     /** Get a list of all subscribers */
     const subscribersList = helper.getListOfAllSubscribers(topicArgs, subscribeMap)
