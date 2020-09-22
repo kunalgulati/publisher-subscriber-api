@@ -41,93 +41,39 @@ describe('App Integration Tests', function () {
         .send('{ "message": "hello"}')
         .end(function (err, res) {
           expect(err).to.be.null;
-          expect(res.body.body).to.be.equal("Succesfully published data to all the subscribers")
+          expect(res.body.message).to.be.equal("Succesfully published data to all the subscribers")
           expect(res).to.have.status(200);
           done();                               
         });
     });
 
     /** Route: /Subscribe/:topic */
-    it('Should return status = 400 and error message in body for in-correct Publishing POST as Input', function (done) { // <= Pass in done callback
+    it('Should return Status = 400 for when empty object is passed as message', function (done) { // <= Pass in done callback
       chai.request('http://localhost:8000')
         .post('/publish/event')
         .type('application/json')
         .send('{}')
         .end(function (err, res) {
           expect(err).to.be.null;
-          expect(res.body.body).to.be.equal("Succesfully published data to all the subscribers")
-          expect(res).to.have.status(200);
+          expect(res.body.message).to.be.equal("No message in the Publish (POST) request")
+          expect(res).to.have.status(400);
           done();                               
         });
     });
 
-    /** Route: /Publish/:topic */
-    // it('Should return status = 200', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:8000')
-    //     .post('/publish/event')
-    //     .type('application/json')
-    //     .send('{ "message": ""}')
-    //     .end(function (err, res) {
-    //       expect(err).to.be.null;
-    //       expect(res).to.have.status(200);
-    //       done();                               
-    //     });
-    // });
-
-    // it('Should return status = 200 for queryString with Direction field', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:4000')
-    //     .get('/api/posts?tags="direction=asc')
-    //     .end(function (err, res) {
-    //       expect(err).to.be.null;
-    //       expect(res).to.have.status(200);
-    //       expect(res).to.be.json;
-    //       done();                               // <= Call done to signal callback end
-    //     });
-    // });
-
-    // it('Should return status = 200 for queryString with SortBy field', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:4000')
-    //     .get('/api/posts?tags="sortBy="likes')
-    //     .end(function (err, res) {
-    //       expect(err).to.be.null;
-    //       expect(res).to.have.status(200);
-    //       expect(res).to.be.json;
-    //       done();                               // <= Call done to signal callback end
-    //     });
-    // });
-
-    // it('Should return status = 400 for queryString with No Tags field', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:4000')
-    //     .get('/api/posts')
-    //     .end(function (err, res) {
-    //       expect(res).to.have.status(400);
-    //       expect(res).to.be.json
-    //       expect(res.body).to.deep.equal({ error: "Tags parameter is required" });
-    //       done();                               // <= Call done to signal callback end
-    //     });
-    // });
-
-    // it('Should return status = 400 for queryString with Wrong SortBy parameter', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:4000')
-    //     .get('/api/posts?tags=history&sortBy=wrong')
-    //     .end(function (err, res) {
-    //       expect(res).to.have.status(400);
-    //       expect(res).to.be.json
-    //       expect(res.body).to.deep.equal({ error: "sortBy parameter is invalid" });
-    //       done();                               // <= Call done to signal callback end
-    //     });
-    // });
-
-    // it('Should return status = 400 for queryString with Wrong Direction parameter', function (done) { // <= Pass in done callback
-    //   chai.request('http://localhost:4000')
-    //     .get('/api/posts?tags=history&sortBy=id&direction=down')
-    //     .end(function (err, res) {
-    //       expect(res).to.have.status(400);
-    //       expect(res).to.be.json
-    //       expect(res.body).to.deep.equal({ error: "direction parameter is invalid" });
-    //       done();                               // <= Call done to signal callback end
-    //     });
-    // });
+    /** Route: /Subscribe/:topic */
+    it('Should return Status = 200 for when pubish request when no subscribers exits for the Topic', function (done) { // <= Pass in done callback
+      chai.request('http://localhost:8000')
+        .post('/publish/noTopic')
+        .type('application/json')
+        .send('{ "message": "hello"}')
+        .end(function (err, res) {
+          expect(err).to.be.null;
+          expect(res.body.message).to.be.equal("No subscribers exists for the Published Topic")
+          expect(res).to.have.status(200);
+          done();                               
+        });
+    });
 
 
   });

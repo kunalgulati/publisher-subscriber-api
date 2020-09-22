@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const async = require("async");
 const axios = require('axios');
 
+/** Helper */
+const helper = require('./lib/helper')
+
 const app = express();
 const PORT = 8000;
 
@@ -11,11 +14,6 @@ const subscribeMap = new Map()
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-/** Helper */
-const getListOfAllSubscribers = (topicParam) => {
-    if (subscribeMap.has(topicParam)) { return subscribeMap.get(topicParam); } else { return [] }
-}
 
 /** 
  * {SUBSCRIBE}
@@ -35,7 +33,7 @@ app.post('/subscribe/:topic', (req, res) => {
     if (subscribeMap.has(topic)) { subscribeMap.get(topic).push(url) } else { subscribeMap.set(topic, [url]); }
     console.log(subscribeMap)
     /** Return 201 code because a new subscription was created.  */
-    res.status(201).send(`Successfully subscribed to topic: ${topic}`)
+    res.status(201).send(`messagefully subscribed to topic: ${topic}`)
 })
 
 /** 
@@ -50,20 +48,22 @@ app.post('/:event', (req, res) => {
 
 /**
  * {PUBLISH}
- * Extract the TOPIC for which the new published message is for 
- * Extract the MESSAGE 
- * Check if any users have subscribed to the TOPIC 
- * If True, then send all of them a post a request (Parallel Request to fasten the process)
- * If False, return True, with a message: no subscribers to the topic 
+ * Extract the Topic and Message from the publish request, then check if any user has subscribed to the Topic. 
+    * If True, then send all the subscribed users a post a request (Parallel Request to fasten the process)
+    * If False, return True, with a message: no subscribers to the topic 
  */
 app.post('/publish/:topic', (req, res) => {
     const topicArgs = req.params.topic;
-    let subscriberData = {}
+    let subscriberData = {};
+    // To ensure the code doesn't in next step (while checking if Object is empty) break if req.body = undefined
+    const data = req.body || {};
 
     /** If the body is not empty, then extract the data */
-    if (req.body != {}) { subscriberData = { topic: topicArgs, data: req.body } } else { subscriberData = { topic: topicArgs, data: "" } }
+    if ( Object.keys(req.body).length == 0) { return res.status(400).send({ message: "No message in the Publish (POST) request"}) }
+    else { subscriberData = { topic: topicArgs, data: req.body } }  
+
     /** Get a list of all subscribers */
-    const subscribersList = getListOfAllSubscribers(topicArgs)
+    const subscribersList = helper.getListOfAllSubscribers(topicArgs, subscribeMap)
 
     if (subscribersList.length > 0) {
         /** POST published message to all the subscribers for the {TOPIC} */
@@ -73,18 +73,16 @@ app.post('/publish/:topic', (req, res) => {
                     /** The error handling strategy was suggested in the assignment. 
                     *   So I am returning response code = 400, when something went wrong with a POST request to a subscriber 
                     * */
-                    if (response.status != 200) { res.send(400).send("Error in Publishing data to Subscriber") }
+                    if (response.status != 200) { return res.status(400).send({ message: "Error in Publishing data to Subscriber"} ) }
                 }).catch((err) => {
-                    console.error(err);
-                    return res.send(400).send("Error in Publishing data to Subscriber")
+                    return res.status(400).send({message: "Error in Publishing data to Subscriber"})
                 });
         });
     } else {
         /** When no subscribers exit for the published topic. The code will still return status code 200, with a more descriptive message. * */
-        return res.status(200).send("No subscribers exists for the Published Topic")
+        return res.status(200).send({ message: "No subscribers exists for the Published Topic"} )
     }
-    console.log("success");
-    return res.status(200).send({body: "Succesfully published data to all the subscribers"})
+    return res.status(200).send({message: "Succesfully published data to all the subscribers"})
 })
 
 app.listen(PORT, () => {
