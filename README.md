@@ -14,11 +14,22 @@ The api with send a message to
 
 ```http://localhost:8000/event```
 
-# Steaps to install 
+### Steps to run 
 
 ```
-Download the repo:
+Download/Clone the repo
 npm install
 npm start or node server.js
 ```
 
+
+## Test Suite
+
+Integration Test cases are testing the API endpoints 
+Unite Test cases are testing the Helper function
+
+### Run Test Suite
+```
+npm test test/integration/server.js
+npm test test/unit/helper.js
+```
