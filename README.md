@@ -1,4 +1,4 @@
-Published Subscriber API
+### Published Subscriber API
 
 A user can subscribe to multiple topics and every time someone publishes a message to that topic, all the subscribers will receive a POST request on the provided endpoint, with the latest published message
 
